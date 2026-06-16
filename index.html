@@ -289,8 +289,6 @@ textarea{resize:vertical;min-height:80px;}
 .shr-btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px;}
 .shr-btn{padding:11px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .18s;display:inline-flex;align-items:center;gap:7px;}
 .shr-wa{background:#25D366;color:#fff;} .shr-wa:hover{background:#128C7E;}
-.shr-li{background:#0A66C2;color:#fff;} .shr-li:hover{background:#004182;}
-.shr-cp{background:var(--ms);color:var(--sl);border:1.5px solid #d1d5db;} .shr-cp:hover{background:#e5e7eb;}
 /* ── Field validation ────────────────────────────────────────────────── */
 .ferr{font-size:11px;color:var(--sm);margin-top:4px;display:none;}
 .inp-err{border-color:var(--sm)!important;box-shadow:0 0 0 3px rgba(255,120,122,.12)!important;}
@@ -330,9 +328,6 @@ textarea{resize:vertical;min-height:80px;}
 .phone-cc{flex:0 0 200px;min-width:140px;}
 .phone-local{flex:1;}
 @media(max-width:520px){.phone-wrap{flex-direction:column;} .phone-cc{flex:1 1 100%;}}
-.li-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--sl);color:#fff;padding:13px 22px;border-radius:10px;font-size:13px;line-height:1.45;box-shadow:0 12px 28px rgba(0,0,0,.32);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:2000;max-width:90vw;text-align:center;}
-.li-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.li-toast strong{color:var(--sd);}
 .consent-block{background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-top:6px;}
 .consent-label{display:flex;align-items:flex-start;gap:10px;font-size:12px;color:var(--lt);cursor:pointer;line-height:1.55;}
 .consent-label input{margin-top:2px;flex-shrink:0;accent-color:var(--dn);}
@@ -2087,8 +2082,6 @@ textarea{resize:vertical;min-height:80px;}
     <p style="margin-top:22px;font-size:14px;color:var(--sl);line-height:1.55;max-width:460px;margin-left:auto;margin-right:auto;">Share the survey with your network and help us uncover the trends shaping Dubai's future.</p>
     <div class="shr-btns">
       <button class="shr-btn shr-wa" onclick="shaWA()">💬 WhatsApp</button>
-      <button class="shr-btn shr-li" onclick="shaLI()">🔗 LinkedIn</button>
-      <button class="shr-btn shr-cp" id="cpBtn" onclick="cpLink()">📋 Copy Link</button>
     </div>
   </div>
 </div><!-- /s_thankyou -->
@@ -3803,7 +3796,7 @@ function submitSurvey(){
   }
 
   // POST to the Supabase Edge Function regardless of where this HTML is hosted
-  var SUBMIT_URL = 'https://rsolawspbalaepdghjtk.supabase.co/functions/v1/survey';
+  var SUBMIT_URL = 'https://ubrtswdvyyqvzpuchgxs.supabase.co/functions/v1/survey';
   var WEBHOOK_URL = 'https://engageteam.app.n8n.cloud/webhook/future-living-survey';
 
   // Fire the webhook in parallel (best-effort; does not block or affect the main submit flow)
@@ -3834,63 +3827,6 @@ var SHARE_MSG  = 'Help shape Dubai\'s future! Take the betterhomes Future Living
 function shaWA(){
   var text=encodeURIComponent(SHARE_MSG+SURVEY_URL);
   window.open('https://wa.me/?text='+text,'_blank','noopener');
-}
-var LI_POST = "I just took part in the betterhomes Future Living Survey 2026 🏙️\n\n"
-  + "It's the most comprehensive annual look at how Dubai residents really feel about renting, buying and the city's long-term direction.\n\n"
-  + "If you live in Dubai, it takes about 10 minutes — and every response is entered into a draw for a 2-night stay at Atlantis The Royal 🏆\n\n"
-  + "Take the survey here: " + SURVEY_URL + "\n\n"
-  + "#FutureLiving2026 #DubaiProperty #betterhomes";
-
-function shaLI(){
-  // LinkedIn no longer accepts prefilled post text via URL — copy to clipboard
-  // so the user can paste it into the composer that opens.
-  var openLI=function(){
-    var url=encodeURIComponent(SURVEY_URL);
-    window.open('https://www.linkedin.com/sharing/share-offsite/?url='+url,'_blank','noopener');
-  };
-
-  function showToast(){
-    var t=document.createElement('div');
-    t.className='li-toast';
-    t.innerHTML='✅ <strong>Post copied!</strong> Just paste it into LinkedIn when it opens.';
-    document.body.appendChild(t);
-    setTimeout(function(){t.classList.add('show');},10);
-    setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},400);},4200);
-  }
-
-  if(navigator.clipboard&&window.isSecureContext){
-    navigator.clipboard.writeText(LI_POST).then(function(){showToast();openLI();})
-      .catch(function(){ fallbackCopyLI(); });
-  } else {
-    fallbackCopyLI();
-  }
-
-  function fallbackCopyLI(){
-    var ta=document.createElement('textarea');
-    ta.value=LI_POST;ta.style.position='fixed';ta.style.opacity='0';
-    document.body.appendChild(ta);ta.select();
-    try{document.execCommand('copy');showToast();}catch(e){}
-    document.body.removeChild(ta);
-    openLI();
-  }
-}
-function cpLink(){
-  var btn=document.getElementById('cpBtn');
-  if(navigator.clipboard&&window.isSecureContext){
-    navigator.clipboard.writeText(SURVEY_URL).then(function(){
-      if(btn){btn.textContent='✅ Copied!';setTimeout(function(){btn.innerHTML='📋 Copy Link';},2500);}
-    }).catch(function(){fallbackCopy(btn);});
-  } else {
-    fallbackCopy(btn);
-  }
-}
-function fallbackCopy(btn){
-  var ta=document.createElement('textarea');
-  ta.value=SURVEY_URL;ta.style.position='fixed';ta.style.opacity='0';
-  document.body.appendChild(ta);ta.select();
-  try{document.execCommand('copy');if(btn){btn.textContent='✅ Copied!';setTimeout(function(){btn.innerHTML='📋 Copy Link';},2500);}}
-  catch(e){alert('Copy failed — please copy the URL manually from your browser.');}
-  document.body.removeChild(ta);
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
