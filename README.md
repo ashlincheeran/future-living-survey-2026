@@ -4,7 +4,7 @@ betterhomes' annual Dubai/UAE residential property-sentiment survey — third ed
 A single self-contained HTML survey that adapts its questions to the respondent's
 emirate (Dubai, Abu Dhabi, or Sharjah) and stores responses in Supabase.
 
-**Live:** https://future-living-survey-2026-v2-betterhomes-projects.vercel.app/
+**Live:** https://survey.bhomes.com/future-living-survey
 
 ---
 
@@ -88,6 +88,19 @@ This repo is a **static site** — no build command, no dependencies, no output 
    - Output Directory: **(leave empty)** — `vercel.json` already declares it's static
    - Click **Deploy**. Done.
 4. From then on, every push to `main` auto-deploys. Pull requests get preview URLs.
+
+### Custom domain and the `/future-living-survey` path
+
+The survey is served at **`survey.bhomes.com/future-living-survey`**:
+
+1. **Domain** — in Vercel: **Project → Settings → Domains → Add** `survey.bhomes.com`,
+   then add the CNAME it shows you at your DNS provider.
+2. **Path** — handled entirely in `vercel.json` (no DNS/folder changes needed):
+   - a **rewrite** makes `/future-living-survey` serve `index.html`, and
+   - a **redirect** sends the bare domain (`/`) to `/future-living-survey`.
+
+   Because of this, all in-page asset references use root-absolute paths
+   (`/assets/...`) so images load correctly regardless of the URL path.
 
 ### Important: where the data goes
 

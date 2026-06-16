@@ -3,5 +3,12 @@
   "framework": null,
   "buildCommand": null,
   "installCommand": null,
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "redirects": [
+    { "source": "/", "destination": "/future-living-survey", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/future-living-survey", "destination": "/index.html" },
+    { "source": "/future-living-survey/", "destination": "/index.html" }
+  ]
 }
