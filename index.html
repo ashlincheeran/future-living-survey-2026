@@ -4,6 +4,35 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Future Living Survey 2026 | betterhomes</title>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1597493793646979');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1597493793646979&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+<meta name="description" content="Share your views on the UAE residential property market and help shape betterhomes' most comprehensive annual property sentiment study.">
+<!-- Open Graph: controls the link-preview card shown on WhatsApp, LinkedIn, etc. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="betterhomes">
+<meta property="og:url" content="https://survey.bhomes.com/future-living-survey">
+<meta property="og:title" content="Future Living Survey 2026 | betterhomes">
+<meta property="og:description" content="Share your views on the UAE residential property market and help shape betterhomes' most comprehensive annual property sentiment study.">
+<meta property="og:image" content="https://survey.bhomes.com/assets/hero-cityscape.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Future Living Survey 2026 | betterhomes">
+<meta name="twitter:description" content="Share your views on the UAE residential property market and help shape betterhomes' most comprehensive annual property sentiment study.">
+<meta name="twitter:image" content="https://survey.bhomes.com/assets/hero-cityscape.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
@@ -19,7 +48,7 @@ header *{pointer-events:auto;}
   position:relative;
   background:
     linear-gradient(180deg, rgba(31,52,63,.70) 0%, rgba(31,52,63,.82) 60%, rgba(44,83,122,.90) 100%),
-    url("assets/hero-cityscape.jpg");
+    url("/assets/hero-cityscape.jpg");
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -349,10 +378,10 @@ textarea{resize:vertical;min-height:80px;}
 </head>
 <body>
 <header>
-  <div><img src="assets/bh-logo.png" alt="betterhomes" class="wm"></div>
+  <div><img src="/assets/bh-logo.png" alt="betterhomes" class="wm"></div>
 </header>
 <div class="hero">
-  <h1 class="hero-logo-wrap"><img src="assets/hero-logo.png" alt="Future Living Survey — Third Edition" class="hero-logo"></h1>
+  <h1 class="hero-logo-wrap"><img src="/assets/hero-logo.png" alt="Future Living Survey — Third Edition" class="hero-logo"></h1>
   <p data-no-swap>Share your views on Dubai, Abu Dhabi, and Sharjah's property market and help shape our most comprehensive annual property sentiment study.</p>
 </div>
 <div class="prog">
@@ -3781,6 +3810,11 @@ function submitSurvey(){
     wants_valuation:  q32val?q32val.value:null,
     user_agent: navigator.userAgent,
     referrer:   document.referrer||null,
+    utm_source:   UTMS.utm_source,
+    utm_medium:   UTMS.utm_medium,
+    utm_campaign: UTMS.utm_campaign,
+    utm_term:     UTMS.utm_term,
+    utm_content:  UTMS.utm_content,
     responses:  fields
   };
 
@@ -3793,6 +3827,8 @@ function submitSurvey(){
     document.getElementById('s_thankyou').style.display='block';
     var pb=document.querySelector('.prog');if(pb)pb.style.display='none';
     window.scrollTo(0,0);
+    // Meta Pixel: fire a Lead conversion only when the survey is completed.
+    try{ if(window.fbq) fbq('track','Lead'); }catch(e){}
   }
 
   // POST to the Supabase Edge Function regardless of where this HTML is hosted
@@ -3820,12 +3856,35 @@ function submitSurvey(){
    });
 }
 
+// ── UTM capture ───────────────────────────────────────────────────────────────
+// Read campaign/attribution params from the landing URL once at page load.
+// Whatever is captured here is sent with the submission and stored in the
+// matching utm_* columns on survey_responses.
+var UTMS = (function(){
+  var p = new URLSearchParams(window.location.search);
+  var get = function(k){ var v=(p.get(k)||'').trim(); return v ? v.slice(0,200) : null; };
+  return {
+    utm_source:   get('utm_source'),
+    utm_medium:   get('utm_medium'),
+    utm_campaign: get('utm_campaign'),
+    utm_term:     get('utm_term'),
+    utm_content:  get('utm_content')
+  };
+})();
+
 // ── Share helpers ─────────────────────────────────────────────────────────────
-var SURVEY_URL = window.location.href;
-var SHARE_MSG  = 'Help shape Dubai\'s future! Take the betterhomes Future Living Survey 2026 and enter to win a 2-night stay at Atlantis The Royal 🏆 ';
+var SHARE_MSG  = 'Take the betterhomes Future Living Survey 2026 ';
+
+// Canonical survey URL with WhatsApp attribution params, so responses arriving
+// via a shared link are tagged utm_source=whatsapp / utm_medium=referral /
+// utm_campaign=future_living_2026 in the database.
+function shareUrlWA(){
+  var base = window.location.origin + window.location.pathname;
+  return base + '?utm_source=whatsapp&utm_medium=referral&utm_campaign=future_living_2026';
+}
 
 function shaWA(){
-  var text=encodeURIComponent(SHARE_MSG+SURVEY_URL);
+  var text=encodeURIComponent(SHARE_MSG+shareUrlWA());
   window.open('https://wa.me/?text='+text,'_blank','noopener');
 }
 

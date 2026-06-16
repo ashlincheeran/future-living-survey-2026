@@ -40,6 +40,11 @@ Deno.serve(async (req: Request) => {
         wants_valuation:  body.wants_valuation || null,
         user_agent:       String(body.user_agent || "").slice(0, 500),
         referrer:         body.referrer || null,
+        utm_source:       body.utm_source   ? String(body.utm_source).slice(0, 200)   : null,
+        utm_medium:       body.utm_medium   ? String(body.utm_medium).slice(0, 200)   : null,
+        utm_campaign:     body.utm_campaign ? String(body.utm_campaign).slice(0, 200) : null,
+        utm_term:         body.utm_term     ? String(body.utm_term).slice(0, 200)     : null,
+        utm_content:      body.utm_content  ? String(body.utm_content).slice(0, 200)  : null,
         responses:        body.responses || {},
       });
       if (error) {
