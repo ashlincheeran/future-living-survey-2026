@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Editor / OS cruft
+*.swp
+*~
+.vscode/
+.idea/
+
+# Local build / working artifacts (not part of the deployed site)
+*.bak
+*.tmp
+
+# Large source material kept locally only (not part of the survey deliverable)
+# e.g. the 32MB 2025 report PDF, raw response exports, etc.
+*.xlsx
