@@ -1,6 +1,10 @@
 # macOS
 .DS_Store
 
+# Windows
+desktop.ini
+Thumbs.db
+
 # Editor / OS cruft
 *.swp
 *~
