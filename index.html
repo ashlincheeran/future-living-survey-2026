@@ -3837,7 +3837,7 @@ function submitSurvey(){
     var pb=document.querySelector('.prog');if(pb)pb.style.display='none';
     window.scrollTo(0,0);
     // Meta Pixel: fire a Lead conversion only when the survey is completed.
-    try{ if(window.fbq) fbq('track','Lead'); }catch(e){}
+    try{ if(window.fbq) fbq('track','Lead', {}, {test_event_code: 'TEST34372'}); }catch(e){ console.error('Lead event failed:', e); }
   }
 
   // POST to the Supabase Edge Function regardless of where this HTML is hosted
