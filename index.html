@@ -3294,9 +3294,14 @@ function goNext(){
     IDX++;
     showSec(ORDER[IDX]);
     upd();
+    // Track the furthest section reached (max, so going back doesn't lower it).
+    var step = IDX + 1;
+    if(step > FURTHEST_STEP){ FURTHEST_STEP = step; FURTHEST_ID = ORDER[IDX]; }
     // Persist the new section index immediately so a refresh resumes here,
     // not at whichever section the user last clicked a field in.
     if(typeof window.saveProgress==='function') window.saveProgress();
+    // Upsert progress + answers-so-far to the backend (drop-off capture).
+    savePartial();
   }
 }
 
@@ -3815,6 +3820,10 @@ function submitSurvey(){
     utm_campaign: UTMS.utm_campaign,
     utm_term:     UTMS.utm_term,
     utm_content:  UTMS.utm_content,
+    session_id:   (typeof ensureSessionId==='function'?ensureSessionId():null),
+    furthest_section:    (typeof ORDER!=='undefined'&&ORDER.length?ORDER.length:null),
+    furthest_section_id: (typeof ORDER!=='undefined'&&ORDER.length?ORDER[ORDER.length-1]:null),
+    total_sections:      (typeof ORDER!=='undefined'&&ORDER.length?ORDER.length:null),
     responses:  fields
   };
 
@@ -3871,6 +3880,56 @@ var UTMS = (function(){
     utm_content:  get('utm_content')
   };
 })();
+
+// ── Partial / drop-off capture ────────────────────────────────────────────────
+// On each section advance we upsert the respondent's progress to the backend,
+// keyed by a per-session id, so we can see where people drop off and keep the
+// answers they gave before leaving. The session id is persisted inside the
+// saved-progress blob, so returning in the same browser continues the same row.
+var SURVEY_API    = 'https://ubrtswdvyyqvzpuchgxs.supabase.co/functions/v1/survey';
+var SESSION_ID    = null;
+var FURTHEST_STEP = 1;     // 1-based position of the furthest section reached
+var FURTHEST_ID   = 's1';  // id of that furthest section
+
+function ensureSessionId(){
+  if(!SESSION_ID){
+    try { SESSION_ID = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : null; } catch(e){ SESSION_ID = null; }
+    if(!SESSION_ID) SESSION_ID = 's-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  }
+  return SESSION_ID;
+}
+
+// Fire-and-forget partial save. Reuses the just-written localStorage snapshot so
+// the stored answers exactly match what's been saved for resume.
+function savePartial(){
+  var raw; try{ raw = localStorage.getItem('flsurvey2026'); }catch(e){ return; }
+  if(!raw) return;
+  var data; try{ data = JSON.parse(raw); }catch(e){ return; }
+  var q11 = data.fields && data.fields.q11;
+  var payload = {
+    partial: true,
+    session_id: ensureSessionId(),
+    furthest_section: FURTHEST_STEP,
+    furthest_section_id: FURTHEST_ID,
+    total_sections: (data.order && data.order.length) || null,
+    emirate: data.emirate || null,
+    tenure:  data.tenure  || null,
+    living_situation: q11 ? (Array.isArray(q11) ? q11[0] : q11) : null,
+    user_agent: navigator.userAgent,
+    referrer: document.referrer || null,
+    utm_source: UTMS.utm_source, utm_medium: UTMS.utm_medium,
+    utm_campaign: UTMS.utm_campaign, utm_term: UTMS.utm_term, utm_content: UTMS.utm_content,
+    responses: data.fields || {}
+  };
+  try{
+    fetch(SURVEY_API, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(function(){});
+  }catch(e){}
+}
 
 // ── Share helpers ─────────────────────────────────────────────────────────────
 var SHARE_MSG  = 'Complete the betterhomes Future Living Survey 2026 and win a 2-night stay at Atlantis The Royal, Dubai. ';
@@ -3935,7 +3994,7 @@ document.addEventListener('DOMContentLoaded',function(){
   var SEC_LABELS = {s1:'Section 1',s2:'Section 2',s3:'Section 3',s4:'Section 4',s5:'Section 5',s6:'Section 6',s7:'Section 7'};
 
   function saveProgress(){
-    var data = {idx: IDX, order: ORDER, tenure: TENURE, emirate: (typeof EMIRATE!=='undefined'?EMIRATE:null), fields: {}, ranks: {}};
+    var data = {idx: IDX, order: ORDER, tenure: TENURE, emirate: (typeof EMIRATE!=='undefined'?EMIRATE:null), sid: (typeof ensureSessionId==='function'?ensureSessionId():null), fields: {}, ranks: {}};
     document.querySelectorAll('input[name],select[name],textarea[name]').forEach(function(el){
       if(el.type==='radio'||el.type==='checkbox'){
         if(el.checked) data.fields[el.name] = (data.fields[el.name]||[]).concat(el.value);
@@ -3965,6 +4024,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!raw) return;
     var data; try{ data=JSON.parse(raw); } catch(e){ return; }
     if(!data||!data.fields) return;
+    if(data.sid) SESSION_ID = data.sid;  // continue the same backend row on resume
 
     // ── Migration guard for V2 ────────────────────────────────────────────
     // If the build includes the emirate screening (s0 exists) but the saved
@@ -4117,6 +4177,11 @@ document.addEventListener('DOMContentLoaded',function(){
       showSec(ORDER[IDX]);
       upd();
     }
+    // Reflect the resumed position in the furthest-section markers.
+    if(typeof IDX==='number'){
+      FURTHEST_STEP = Math.max(FURTHEST_STEP, IDX + 1);
+      if(ORDER && ORDER[IDX]) FURTHEST_ID = ORDER[IDX];
+    }
 
     // Show resume banner
     var completedSecs = ORDER.slice(0,IDX).map(function(s){ return SEC_LABELS[s]||s; });
@@ -4153,6 +4218,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
   // Restore on load
   restoreProgress();
+  ensureSessionId();   // make sure a session id exists even on a fresh start
   renumberQuestions();
 
   // ── First-load scroll: jump straight to the screening question (s0) if
